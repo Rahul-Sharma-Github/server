@@ -19,29 +19,31 @@ io.on('connection', (socket) => {
   console.log('User connected: ', socket.id);
 
   // Join a group (room) and add members
-  socket.on('joinGroup', ({ groupName, userName }) => {
-    if (!groupName || !userName) {
+socket.on('joinGroup', ({ groupName, userName }) => {
+  if (!groupName || !userName) {
       console.error('Invalid join request: Missing groupName or userName');
       return;
-    }
+  }
 
-    // Initialize group and group messages if not already done
-    if (!groups[groupName]) groups[groupName] = [];
-    if (!groupMessages[groupName]) groupMessages[groupName] = [];
+  // Initialize group and group messages if not already done
+  if (!groups[groupName]) {
+      groups[groupName] = [];
+      groupMessages[groupName] = []; // Ensure the group has a message array
+  }
 
-    // Add user to the group if not already present
-    if (!groups[groupName].some(member => member.userId === socket.id)) {
+  // Add user to the group if not already present
+  if (!groups[groupName].some(member => member.userId === socket.id)) {
       groups[groupName].push({ userId: socket.id, userName });
-    }
+  }
 
-    socket.join(groupName);
+  socket.join(groupName);
 
-    // Send previous messages for the group to the new member
-    socket.emit('previousMessages', groupMessages[groupName]);
+  // Send previous messages for the group to the new member
+  socket.emit('previousMessages', groupMessages[groupName]);
 
-    // Notify group of new member
-    io.to(groupName).emit('groupMembers', groups[groupName]);
-  });
+  // Notify group of new member
+  io.to(groupName).emit('groupMembers', groups[groupName]);
+});
 
   // Handle message sending to a specific group
   socket.on('sendMessage', ({ groupName, message, userName }) => {
